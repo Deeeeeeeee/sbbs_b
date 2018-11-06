@@ -1,0 +1,5 @@
+database:
+  # dataSourceName: root:123456@tcp(localhost:3306)/wuhu
+  # driverName: mysql
+  dataSourceName: conversion.db
+  driverName: sqlite3

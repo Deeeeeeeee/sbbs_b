@@ -1,0 +1,25 @@
+required = ["github.com/go-xorm/xorm", "github.com/gin-gonic/gin", "gopkg.in/yaml.v2", "github.com/mattn/go-sqlite3", "github.com/go-sql-driver/mysql"]
+# ignored = ["github.com/user/project/pkgX", "bitbucket.org/user/project/pkgA/pkgY"]
+#
+# [[constraint]]
+#   name = "github.com/user/project"
+#   version = "1.0.0"
+#
+# [[constraint]]
+#   name = "github.com/user/project2"
+#   branch = "dev"
+#   source = "github.com/myfork/project2"
+#
+# [[override]]
+#   name = "github.com/x/y"
+#   version = "2.4.0"
+#
+# [prune]
+#   non-go = false
+#   go-tests = true
+#   unused-packages = true
+
+
+[prune]
+  go-tests = true
+  unused-packages = true
