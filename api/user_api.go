@@ -12,7 +12,7 @@ import (
 func SetupUserAPIRouter(r *gin.RouterGroup) {
 	r.GET("/:id", GetOne(&dao.User{}))
 	r.GET("", userPage)
-	r.POST("", Create(&dao.User{}))
+	r.POST("", userRegistered)
 	r.PUT("/:id", Update(&dao.User{}, &dao.User{}))
 	r.DELETE("/:id", Delete(&dao.User{}))
 }
@@ -24,4 +24,14 @@ func userPage(c *gin.Context) {
 	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
 	dao.Orm.Limit(size, (page-1)*size).Find(&users)
 	c.JSON(http.StatusOK, users)
+}
+
+// userRegistered 用户注册
+func userRegistered(c *gin.Context) {
+	var dto dao.User
+	if err := c.ShouldBindJSON(dto); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "参数错误: " + err.Error()})
+		return
+	}
+
 }

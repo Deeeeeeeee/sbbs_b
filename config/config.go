@@ -21,13 +21,16 @@ var Config T
 // InitConfig 初始化配置文件
 func InitConfig(env string) {
 	var data []byte
-	if env == "local" {
-		data, _ = ioutil.ReadFile("config/local.yml")
-	} else if env == "dev" {
-		data, _ = ioutil.ReadFile("config/dev.yml")
-	} else if env == "pro" {
-		data, _ = ioutil.ReadFile("config/pro.yml")
+	var configFile = ""
+	switch env {
+	case "local":
+		configFile = "config/local.yml"
+	case "dev":
+		configFile = "config/dev.yml"
+	case "prod":
+		configFile = "config/prod.yml"
 	}
+	data, _ = ioutil.ReadFile(configFile)
 	if err := yaml.Unmarshal(data, &Config); err != nil {
 		log.Fatalln("配置文件读取失败: " + err.Error())
 	}

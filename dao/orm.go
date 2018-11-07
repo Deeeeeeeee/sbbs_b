@@ -32,7 +32,7 @@ func InitOrm() {
 	Orm.SetMaxOpenConns(50)
 
 	// 同步表结构
-	err = Orm.Sync2(new(User))
+	err = Orm.Sync2(new(User), new(Tag), new(Comment))
 	if err != nil {
 		log.Fatalln(err)
 	}
