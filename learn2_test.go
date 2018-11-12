@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"testing"
+	"time"
 )
 
 // range
@@ -275,5 +276,204 @@ func TestErrors(t *testing.T) {
 	if ae, ok := e.(*argError); ok {
 		fmt.Println(ae.arg)
 		fmt.Println(ae.prob)
+	}
+}
+
+// 协程
+func f(from string) {
+	for i := 0; i < 3; i++ {
+		fmt.Println(from, ":", i)
+	}
+}
+
+func TestGoroutines(t *testing.T) {
+	f("direct")
+
+	go f("goroutine")
+
+	go func(msg string) {
+		fmt.Println(msg)
+	}("going")
+
+	fmt.Scanln()
+	fmt.Println("done")
+}
+
+// 通道
+func TestChannel(t *testing.T) {
+	messages := make(chan string)
+
+	go func() { messages <- "ping" }()
+
+	msg := <-messages
+	fmt.Println(msg)
+}
+
+// 通道缓存
+func TestChannelBuffering(t *testing.T) {
+	messages := make(chan string, 2)
+
+	messages <- "buffered"
+	messages <- "channel"
+
+	fmt.Println(<-messages)
+	fmt.Println(<-messages)
+}
+
+// 通道同步 可以实现等待 goroutine 结束
+func Worker(done chan bool) {
+	fmt.Println("working...")
+	time.Sleep(time.Second)
+	fmt.Println("done")
+
+	done <- true
+}
+
+func TestChannelSynchronization(t *testing.T) {
+	done := make(chan bool, 1)
+	go Worker(done)
+
+	<-done
+}
+
+// 通道方向 可以指定通道是发送还是接收数据
+func ping(pings chan<- string, msg string) {
+	pings <- msg
+}
+
+func pong(pings <-chan string, pongs chan<- string) {
+	msg := <-pings
+	pongs <- msg
+}
+
+func TestChannelDirections(t *testing.T) {
+	pings := make(chan string, 1)
+	pongs := make(chan string, 1)
+	ping(pings, "passed message")
+	pong(pings, pongs)
+	fmt.Println(<-pongs)
+}
+
+// select 可以同时等待多个 channel
+func TestSelect(t *testing.T) {
+	c1 := make(chan string)
+	c2 := make(chan string)
+
+	go func() {
+		time.Sleep(1 * time.Second)
+		c1 <- "one"
+	}()
+	go func() {
+		time.Sleep(2 * time.Second)
+		c2 <- "two"
+	}()
+
+	for i := 0; i < 2; i++ {
+		select {
+		case msg1 := <-c1:
+			fmt.Println("received", msg1)
+		case msg1 := <-c2:
+			fmt.Println("received", msg1)
+		}
+	}
+}
+
+// 超时
+func TestTimeouts(t *testing.T) {
+	c1 := make(chan string, 1)
+	go func() {
+		time.Sleep(2 * time.Second)
+		c1 <- "result 1"
+	}()
+
+	select {
+	case res := <-c1:
+		fmt.Println(res)
+	case <-time.After(1 * time.Second):
+		fmt.Println("timeout 1")
+	}
+
+	c2 := make(chan string, 1)
+	go func() {
+		time.Sleep(2 * time.Second)
+		c2 <- "result 2"
+	}()
+
+	select {
+	case res := <-c2:
+		fmt.Println(res)
+	case <-time.After(3 * time.Second):
+		fmt.Println("timeout 2")
+	}
+}
+
+// 非阻塞通道操作 使用 default 达到非阻塞的功能
+func TestNonBlockingChannelOperations(t *testing.T) {
+	messages := make(chan string)
+	signals := make(chan bool)
+
+	select {
+	case msg := <-messages:
+		fmt.Println("received message", msg)
+	default:
+		fmt.Println("no message received")
+	}
+
+	msg := "hi"
+	select {
+	case messages <- msg: // messages 没有缓存，这里也没有 receiver，所以会阻塞
+		fmt.Println("sent message", msg)
+	default:
+		fmt.Println("no message sent")
+	}
+
+	select {
+	case msg := <-messages:
+		fmt.Println("received message", msg)
+	case sig := <-signals:
+		fmt.Println("received signal", sig)
+	default:
+		fmt.Println("no activity")
+	}
+}
+
+// 关闭的通道
+func TestClosingChannels(t *testing.T) {
+	jobs := make(chan int, 5)
+	done := make(chan bool)
+
+	go func() {
+		for {
+			j, more := <-jobs // 当 jobs close 且所有数据都被接收时，more 为 false
+			if more {
+				fmt.Println("received job", j)
+			} else {
+				fmt.Println("received all jobs")
+				done <- true
+				return
+			}
+		}
+	}()
+
+	for j := 1; j <= 3; j++ {
+		jobs <- j
+		fmt.Println("sent job", j)
+		// time.Sleep(time.Second)
+	}
+	close(jobs)
+	fmt.Println("sent all jobs")
+
+	<-done
+}
+
+// 遍历通道
+func TestRangeOverChannels(t *testing.T) {
+	queue := make(chan string, 2)
+	queue <- "one"
+	queue <- "two"
+	close(queue)
+
+	for elem := range queue {
+		fmt.Println(elem)
 	}
 }
