@@ -1,16 +1,24 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/sha1"
+	"encoding/base64"
 	"encoding/json"
+	"flag"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"math/rand"
 	"net"
 	"net/url"
 	"os"
+	"os/exec"
 	"regexp"
 	"strconv"
+	"strings"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -301,4 +309,195 @@ func TestSHA1Hashes(t *testing.T) {
 
 	fmt.Println(s)
 	fmt.Printf("%x\n", bs)
+}
+
+// Base64 Encoding
+func TestBase64Encoding(t *testing.T) {
+	data := "abc123!?$*&()'-=@~"
+
+	sEnc := base64.StdEncoding.EncodeToString([]byte(data))
+	fmt.Println(sEnc)
+
+	sDec, _ := base64.StdEncoding.DecodeString(sEnc)
+	fmt.Println(string(sDec))
+	fmt.Println()
+
+	uEnc := base64.URLEncoding.EncodeToString([]byte(data))
+	fmt.Println(uEnc)
+	uDec, _ := base64.URLEncoding.DecodeString(uEnc)
+	fmt.Println(string(uDec))
+}
+
+// 读取文件
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
+}
+
+func TestReadingFiles(t *testing.T) {
+	dat, err := ioutil.ReadFile("/tmp/dat")
+	check(err)
+	fmt.Print(string(dat))
+
+	f, err := os.Open("/tmp/dat")
+	check(err)
+
+	b1 := make([]byte, 5)
+	n1, err := f.Read(b1)
+	check(err)
+	fmt.Printf("%d bytes: %s\n", n1, string(b1))
+
+	o2, err := f.Seek(6, 0)
+	check(err)
+	b2 := make([]byte, 2)
+	n2, err := f.Read(b2)
+	check(err)
+	fmt.Printf("%d byte @ %d: %s\n", n2, o2, string(b2))
+
+	o3, err := f.Seek(6, 0)
+	check(err)
+	b3 := make([]byte, 2)
+	n3, err := io.ReadAtLeast(f, b3, 2)
+	check(err)
+	fmt.Printf("%d byte @ %d: %s\n", n3, o3, string(b3))
+
+	_, err = f.Seek(0, 0)
+	check(err)
+
+	r4 := bufio.NewReader(f)
+	b4, err := r4.Peek(5)
+	check(err)
+	fmt.Printf("5 byte: %s\n", string(b4))
+
+	f.Close()
+}
+
+// 写文件
+func TestWritingFiles(t *testing.T) {
+	d1 := []byte("hello\ngo\n")
+	err := ioutil.WriteFile("/tmp/dat1", d1, 0644)
+	check(err)
+
+	f, err := os.Create("/tmp/dat2")
+	check(err)
+
+	defer f.Close()
+
+	d2 := []byte{115, 111, 109, 101, 10}
+	n2, err := f.Write(d2)
+	check(err)
+	fmt.Printf("wrote %d bytes\n", n2)
+
+	n3, err := f.WriteString("writes\n")
+	fmt.Printf("wrote %d bytes\n", n3)
+
+	f.Sync()
+
+	w := bufio.NewWriter(f)
+	n4, err := w.WriteString("buffered\n")
+	fmt.Printf("wrote %d bytes\n", n4)
+
+	w.Flush()
+}
+
+// Line Filters
+func TestLineFilters(t *testing.T) {
+	scanner := bufio.NewScanner(os.Stdin)
+
+	for scanner.Scan() {
+		ucl := strings.ToUpper(scanner.Text())
+		fmt.Println(ucl)
+	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Fprintln(os.Stderr, "error:", err)
+		os.Exit(1)
+	}
+}
+
+// 命令行参数
+func TestCommandLineArguments(t *testing.T) {
+	argsWithProg := os.Args
+	argsWithoutProg := os.Args[1:]
+
+	arg := os.Args[3]
+
+	fmt.Println(argsWithProg)
+	fmt.Println(argsWithoutProg)
+	fmt.Println(arg)
+}
+
+// 命令行标记
+func TestCommandLineFlags(t *testing.T) {
+	wordPtr := flag.String("word", "foo", "a string")
+
+	numPtr := flag.Int("num", 42, "an int")
+	boolPtr := flag.Bool("fork", false, "a bool")
+
+	var svar string
+	flag.StringVar(&svar, "svar", "bar", "a string var")
+
+	flag.Parse()
+
+	fmt.Println("word:", *wordPtr)
+	fmt.Println("num:", *numPtr)
+	fmt.Println("bool:", *boolPtr)
+	fmt.Println("svar:", svar)
+	fmt.Println("tail:", flag.Args())
+}
+
+// 环境变量
+func TestEnvironmentVariables(t *testing.T) {
+	os.Setenv("FOO", "1")
+	fmt.Println("FOO:", os.Getenv("FOO"))
+	fmt.Println("BAR:", os.Getenv("BAR"))
+
+	fmt.Println()
+	for _, e := range os.Environ() {
+		pair := strings.Split(e, "=")
+		fmt.Println(pair[0])
+	}
+}
+
+// 调用非 go 进程
+func TestSpawningProcesses(t *testing.T) {
+	dateCmd := exec.Command("date")
+
+	dateOut, err := dateCmd.Output()
+	check(err)
+	fmt.Println("> date")
+	fmt.Println(string(dateOut))
+
+	grepCmd := exec.Command("grep", "hello")
+
+	grepIn, _ := grepCmd.StdinPipe()
+	grepOut, _ := grepCmd.StdoutPipe()
+	grepCmd.Start()
+	grepIn.Write([]byte("hello grep\ngoodbye grep"))
+	grepIn.Close()
+	grepBytes, _ := ioutil.ReadAll(grepOut)
+	grepCmd.Wait()
+
+	fmt.Println("> grep hello")
+	fmt.Println(string(grepBytes))
+
+	lsCmd := exec.Command("bash", "-c", "ls -a -l -h")
+	lsOut, err := lsCmd.Output()
+	check(err)
+	fmt.Println("> ls -a -l -h")
+	fmt.Println(string(lsOut))
+}
+
+// Exec'ing Processes
+func TestExecingProcesses(t *testing.T) {
+	binary, err := exec.LookPath("ls")
+	check(err)
+
+	args := []string{"ls", "-a", "-l", "-h"}
+
+	env := os.Environ()
+
+	err = syscall.Exec(binary, args, env)
+	check(err)
 }
