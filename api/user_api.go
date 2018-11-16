@@ -1,7 +1,9 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
+	"sbbs_b/common"
 	"sbbs_b/dao"
 	"strconv"
 
@@ -29,9 +31,12 @@ func userPage(c *gin.Context) {
 // userRegistered 用户注册
 func userRegistered(c *gin.Context) {
 	var dto dao.User
-	if err := c.ShouldBindJSON(dto); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "参数错误: " + err.Error()})
-		return
-	}
+	bindJSON(c, &dto)
+	fmt.Println(dto)
+}
 
+func bindJSON(c *gin.Context, dto interface{}) {
+	if c.ShouldBindJSON(dto) != nil {
+		panic(common.ParseError{"eee"})
+	}
 }

@@ -5,7 +5,7 @@ import "time"
 // User describes a user
 type User struct {
 	ID          int64     `json:"id"`
-	AccountName string    `xorm:"varchar(64) comment '昵称'" json:"accountName"`
+	AccountName string    `xorm:"varchar(64) comment '账户名称'" json:"accountName"`
 	Nickename   string    `xorm:"varchar(64) comment '昵称'" json:"nickname"`
 	Password    string    `xorm:"varchar(64) commnet '登录密码'" json:"password"`
 	Created     time.Time `xorm:"created" json:"created"`

@@ -9,9 +9,13 @@ import (
 
 // T config
 type T struct {
-	Database struct {
+	Application string
+	Database    struct {
 		DataSourceName string `yaml:"dataSourceName"`
 		DriverName     string `yaml:"driverName"`
+	}
+	Log struct {
+		File string
 	}
 }
 

@@ -1,5 +1,8 @@
+application: sbb_b
 database:
   # dataSourceName: root:123456@tcp(localhost:3306)/wuhu
   # driverName: mysql
   dataSourceName: conversion.db
   driverName: sqlite3
+log:
+  file: /tmp/{application}/output.log
