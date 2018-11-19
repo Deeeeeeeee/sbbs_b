@@ -15,6 +15,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"os/signal"
 	"regexp"
 	"strconv"
 	"strings"
@@ -460,7 +461,7 @@ func TestEnvironmentVariables(t *testing.T) {
 	}
 }
 
-// 调用非 go 进程
+// 调用非 go 进程，（子进程？）
 func TestSpawningProcesses(t *testing.T) {
 	dateCmd := exec.Command("date")
 
@@ -500,4 +501,30 @@ func TestExecingProcesses(t *testing.T) {
 
 	err = syscall.Exec(binary, args, env)
 	check(err)
+}
+
+// Signals
+func TestSignals(t *testing.T) {
+	sigs := make(chan os.Signal, 1)
+	done := make(chan bool, 1)
+
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		sig := <-sigs
+		fmt.Println()
+		fmt.Println(sig)
+		done <- true
+	}()
+
+	fmt.Println("awating signal")
+	<-done
+	fmt.Println("exiting")
+}
+
+// Exit 不会执行 defer
+func TestExit(t *testing.T) {
+	defer fmt.Println("!")
+
+	os.Exit(3)
 }
