@@ -1,11 +1,13 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"sbbs_b/dao"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	validator "gopkg.in/go-playground/validator.v9"
 )
 
 // SetupUserAPIRouter 初始化 user api router
@@ -30,5 +32,11 @@ func userPage(c *gin.Context) {
 func userRegistered(c *gin.Context) {
 	var dto dao.User
 	BindJSON(c, &dto)
+	validate := validator.New()
+	if err := validate.Struct(&dto); err != nil {
+		fmt.Println(err.Error())
+	}
 
+	// 根据邮箱查询，如果有则抛出异常，否则新增用户
+	// dao.Orm.Insert(dto)
 }

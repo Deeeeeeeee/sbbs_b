@@ -4,12 +4,12 @@ import "time"
 
 // User describes a user
 type User struct {
-	ID          int64     `json:"id"`
-	AccountName string    `xorm:"varchar(64) comment '账户名称'" json:"accountName"`
-	Nickename   string    `xorm:"varchar(64) comment '昵称'" json:"nickname"`
-	Password    string    `xorm:"varchar(64) commnet '登录密码'" json:"password"`
-	Created     time.Time `xorm:"created" json:"created"`
-	Updated     time.Time `xorm:"updated" json:"updated"`
+	ID        int64     `json:"id"`
+	Nickename string    `xorm:"varchar(64) comment '昵称'" json:"nickname" validate:"required"`
+	Email     string    `xorm:"varchar(255) comment '邮箱'" json:"email" validate:"required"`
+	Password  string    `xorm:"varchar(64) commnet '登录密码'" json:"password" validate:"required"`
+	Created   time.Time `xorm:"created" json:"created"`
+	Updated   time.Time `xorm:"updated" json:"updated"`
 }
 
 // Tag describes a tag 标签
