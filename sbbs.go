@@ -9,6 +9,7 @@ import (
 	"sbbs_b/dao"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 )
 
 func setupRouter() *gin.Engine {
@@ -31,6 +32,9 @@ func setupConfig() {
 	// 默认 local
 	env := flag.String("env", "local", "环境配置参数")
 	flag.Parse()
+
+	// validator
+	binding.Validator = common.NewValidator()
 
 	// 初始化配置信息
 	config.InitConfig(*env)
