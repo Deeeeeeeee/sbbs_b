@@ -22,15 +22,22 @@ func userPage(c *gin.Context) {
 	var users []dao.User
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
-	dao.Orm.Limit(size, (page-1)*size).Find(&users)
+	dao.Engine().Limit(size, (page-1)*size).Find(&users)
 	c.JSON(http.StatusOK, users)
 }
 
 // userRegistered 用户注册
 func userRegistered(c *gin.Context) {
 	var dto dao.User
-	BindJSON(c, &dto)
+	BindJSONWithValidate(c, &dto, "user_register")
 
 	// 根据邮箱查询，如果有则抛出异常，否则新增用户
-	// dao.Orm.Insert(dto)
+	if has, err := dao.Engine().Table("user").Where("email", dto.Email).Exist(); has {
+		if err != nil {
+			panic(err)
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"message": "email 已经存在"})
+		return
+	}
+	dao.Engine().Insert(dto)
 }

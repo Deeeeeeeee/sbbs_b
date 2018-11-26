@@ -6,7 +6,6 @@ import (
 	"sbbs_b/api"
 	"sbbs_b/common"
 	"sbbs_b/config"
-	"sbbs_b/dao"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -38,8 +37,6 @@ func setupConfig() {
 
 	// 初始化配置信息
 	config.InitConfig(*env)
-	// 初始化 orm
-	dao.InitOrm()
 }
 
 func main() {

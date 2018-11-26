@@ -4,35 +4,49 @@ import (
 	"log"
 	"os"
 	"sbbs_b/config"
+	"sync"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/go-xorm/xorm"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// Orm xorm engine
-var Orm *xorm.Engine
+var (
+	orm  *xorm.Engine
+	once sync.Once
+)
 
-// InitOrm 初始化 orm
-func InitOrm() {
+// Engine 返回 xorm
+func Engine() *xorm.Engine {
+	lazyinit()
+	return orm
+}
+
+func lazyinit() {
+	once.Do(func() {
+		initOrm()
+	})
+}
+
+func initOrm() {
 	database := config.Config.Database
 	if database.DriverName == "sqlite3" {
 		os.Remove(database.DataSourceName)
 	}
 
 	var err error
-	Orm, err = xorm.NewEngine(database.DriverName, database.DataSourceName)
+	orm, err = xorm.NewEngine(database.DriverName, database.DataSourceName)
 	if err != nil {
 		log.Fatalln(err)
 		return
 	}
 
-	Orm.ShowSQL(true)
-	Orm.SetMaxIdleConns(20)
-	Orm.SetMaxOpenConns(50)
+	orm.ShowSQL(true)
+	orm.SetMaxIdleConns(20)
+	orm.SetMaxOpenConns(50)
 
 	// 同步表结构
-	err = Orm.Sync2(new(User), new(Tag), new(Comment))
+	err = orm.Sync2(new(User), new(Tag), new(Comment))
 	if err != nil {
 		log.Fatalln(err)
 	}
