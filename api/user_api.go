@@ -32,12 +32,12 @@ func userRegistered(c *gin.Context) {
 	BindJSONWithValidate(c, &dto, "user_register")
 
 	// 根据邮箱查询，如果有则抛出异常，否则新增用户
-	if has, err := dao.Engine().Table("user").Where("email", dto.Email).Exist(); has {
-		if err != nil {
-			panic(err)
-		}
+	if has, _ := dao.Engine().Table("user").Where("email = ?", dto.Email).Exist(); has {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "email 已经存在"})
 		return
 	}
-	dao.Engine().Insert(dto)
+	// 密码加密
+
+	id, _ := dao.Engine().Insert(dto)
+	c.JSON(http.StatusOK, gin.H{"id": id})
 }
