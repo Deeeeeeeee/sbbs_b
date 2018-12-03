@@ -1,7 +1,9 @@
 package api
 
 import (
+	"encoding/binary"
 	"net/http"
+	"sbbs_b/common"
 	"sbbs_b/dao"
 	"strconv"
 
@@ -40,4 +42,17 @@ func userRegistered(c *gin.Context) {
 
 	id, _ := dao.Engine().Insert(dto)
 	c.JSON(http.StatusOK, gin.H{"id": id})
+}
+
+func setPwd(user *dao.User) {
+	salt, _ := common.RandomSalt()
+	cryPwd, err := common.CryptPwd(salt, user.Password)
+	if err != nil {
+		panic(common.HTTP400Error("密码加密失败" + err.Error()))
+	}
+
+	intSalt := binary.BigEndian.Uint64(salt)
+
+	user.Password = cryPwd
+	user.Salt = intSalt
 }

@@ -8,6 +8,7 @@ type User struct {
 	Nickename string    `xorm:"varchar(64)" json:"nickname" user_register:"required"`
 	Email     string    `xorm:"varchar(255)" json:"email" user_register:"required"`
 	Password  string    `xorm:"varchar(64)" json:"password" user_register:"required"`
+	Salt      uint64    `xorm:"bigint(64)" json:"-"`
 	Created   time.Time `xorm:"created" json:"created"`
 	Updated   time.Time `xorm:"updated" json:"updated"`
 }
