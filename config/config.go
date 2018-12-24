@@ -7,6 +7,9 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
+// Config 全局变量
+var Config T
+
 // T config
 type T struct {
 	Application string
@@ -14,13 +17,15 @@ type T struct {
 		DataSourceName string `yaml:"dataSourceName"`
 		DriverName     string `yaml:"driverName"`
 	}
+	Redis struct {
+		Addr     string `yaml:"addr"`
+		Password string `yaml:"password"`
+		DB       int    `yaml:"db"`
+	}
 	Log struct {
 		File string
 	}
 }
-
-// Config 全局变量
-var Config T
 
 // InitConfig 初始化配置文件
 func InitConfig(env string) {

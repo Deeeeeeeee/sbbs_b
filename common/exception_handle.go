@@ -12,7 +12,7 @@ func ExceptionMiddelware() gin.HandlerFunc {
 		defer func() {
 			if err := recover(); err != nil {
 				if e, ok := err.(httpError); ok {
-					http400ErrorHandle(c, e)
+					httpErrorHandle(c, e)
 				} else {
 					panic(err)
 				}
@@ -22,30 +22,34 @@ func ExceptionMiddelware() gin.HandlerFunc {
 	}
 }
 
-func http400ErrorHandle(c *gin.Context, err httpError) {
+func httpErrorHandle(c *gin.Context, err httpError) {
 	c.AbortWithStatusJSON(err.HTTPCode(), gin.H{"message": err.Error()})
 }
 
-// HTTPError 带 http code 的 error
-type httpError interface {
-	Error() string
-	HTTPCode() int
+// HTTPError 返回 httpError
+func HTTPError(httpCode int, msg string) error {
+	return &httpError{httpCode: httpCode, Message: msg}
 }
 
-// HTTP400Error 返回 http400Error
+// HTTP400Error 返回 httpError 其中 httpCode 为 400
 func HTTP400Error(msg string) error {
-	return &http400Error{httpCode: http.StatusBadRequest, Message: msg}
+	return &httpError{httpCode: http.StatusBadRequest, Message: msg}
 }
 
-type http400Error struct {
+// HTTP500Error 返回 httpError 其中 httpCode 为 500
+func HTTP500Error(msg string) error {
+	return &httpError{httpCode: http.StatusInternalServerError, Message: msg}
+}
+
+type httpError struct {
 	httpCode int
 	Message  string
 }
 
-func (e *http400Error) Error() string {
+func (e *httpError) Error() string {
 	return e.Message
 }
 
-func (e *http400Error) HTTPCode() int {
+func (e *httpError) HTTPCode() int {
 	return e.httpCode
 }

@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"sbbs_b/api"
 	"sbbs_b/common"
 	"sbbs_b/config"
+	"sbbs_b/user"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -19,10 +19,9 @@ func setupRouter() *gin.Engine {
 	r := gin.New()
 
 	r.Use(gin.Logger(), gin.Recovery(), common.ExceptionMiddelware())
-	// r := gin.Default()
 
 	// user api
-	api.SetupUserAPIRouter(r.Group("/user"))
+	user.SetupUserAPIRouter(r.Group("/user"))
 
 	return r
 }
