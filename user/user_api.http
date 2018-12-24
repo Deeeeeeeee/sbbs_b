@@ -1,0 +1,18 @@
+### 注册用户 参数不正确
+POST http://localhost:8080/user
+
+{
+    "nickname": "sdf"
+}
+
+### 注册用户 参数正确
+POST http://localhost:8080/user
+
+{
+    "nickname": "sdf",
+    "email":    "seal.de@foxmail.com",
+    "password": "123456"
+}
+
+### 分页查询用户
+GET http://localhost:8080/user
