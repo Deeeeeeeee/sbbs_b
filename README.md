@@ -39,3 +39,5 @@
 - 登录时校验密码，从 redis 中查用户的 jwt，如果有返回 jwt，没有则生成
 - 退出登录时，将 jwt 设置到 redis 的 blacklist，客户端清除 jwt
 - 使用 jwt 时，先校验，然后再查询 blacklist
+
+jwt 内容：exp iss jti
