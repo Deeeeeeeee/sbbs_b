@@ -8,8 +8,8 @@ import (
 )
 
 // RandomSalt 返回 8 byte 随机盐
-func RandomSalt() (salt []byte, err error) {
-	b := make([]byte, 8)
+func RandomSalt(len int) (salt []byte, err error) {
+	b := make([]byte, len)
 	if _, err := rand.Read(b); err != nil {
 		return nil, err
 	}

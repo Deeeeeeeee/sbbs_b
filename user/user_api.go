@@ -34,7 +34,7 @@ func userRegistered(c *gin.Context) {
 }
 
 func encryPwd(user *User) {
-	salt, _ := util.RandomSalt()
+	salt, _ := util.RandomSalt(8)
 	cryPwd, err := util.CryptPwd(salt, user.Password)
 	if err != nil {
 		panic(common.HTTPError(http.StatusInternalServerError, "密码加密失败"+err.Error()))

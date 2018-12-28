@@ -1,11 +1,20 @@
 package util
 
-import jwt "github.com/dgrijalva/jwt-go"
+import (
+	"fmt"
+	"time"
 
-func generateJwt() {
+	jwt "github.com/dgrijalva/jwt-go"
+)
+
+func generateJwt(userId int64) {
 	claims := &jwt.StandardClaims{
-		ExpiresAt: 15000,
+		ExpiresAt: time.Now().AddDate(0, 0, 1).UnixNano(),
 		Issuer:    "front",
-		ID:			
+		Id:        string(userId),
+		IssuedAt:  time.Now().UnixNano(),
 	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	ss, _ := token.SignedString([]byte("fsdfsl"))
+	fmt.Println(ss)
 }
