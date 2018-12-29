@@ -7,7 +7,7 @@ import (
 	"golang.org/x/crypto/scrypt"
 )
 
-// RandomSalt 返回 8 byte 随机盐
+// RandomSalt 返回随机盐
 func RandomSalt(len int) (salt []byte, err error) {
 	b := make([]byte, len)
 	if _, err := rand.Read(b); err != nil {

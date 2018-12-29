@@ -37,7 +37,7 @@ func encryPwd(user *User) {
 	salt, _ := util.RandomSalt(8)
 	cryPwd, err := util.CryptPwd(salt, user.Password)
 	if err != nil {
-		panic(common.HTTPError(http.StatusInternalServerError, "密码加密失败"+err.Error()))
+		panic(common.HTTP500Error("密码加密失败" + err.Error()))
 	}
 
 	user.Password = cryPwd
@@ -63,7 +63,7 @@ func userLogin(c *gin.Context) {
 	// 从 redis 查询 jwt，存在直接返回，不存在创建 jwt
 	jwt := jwt(dto.ID)
 	if len(jwt) == 0 {
-
+		jwt = util.GenerateJwt(persist.ID)
 	}
 	c.JSON(http.StatusOK, gin.H{"jwt": jwt})
 }
