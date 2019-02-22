@@ -4,10 +4,14 @@ import (
 	"encoding/base64"
 	"net/http"
 	"sbbs_b/common"
+	"sbbs_b/entity"
 	"sbbs_b/util"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
+
+const authHeader string = "Authentication"
 
 // SetupUserAPIRouter 初始化 user api router
 func SetupUserAPIRouter(r *gin.RouterGroup) {
@@ -17,7 +21,7 @@ func SetupUserAPIRouter(r *gin.RouterGroup) {
 
 // userRegistered 用户注册
 func userRegistered(c *gin.Context) {
-	var dto User
+	var dto entity.User
 	common.BindJSONWithValidate(c, &dto, "user_register")
 
 	// 根据邮箱查询，如果有则抛出异常，否则新增用户
@@ -33,7 +37,7 @@ func userRegistered(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"id": id})
 }
 
-func encryPwd(user *User) {
+func encryPwd(user *entity.User) {
 	salt, _ := util.RandomSalt(8)
 	cryPwd, err := util.CryptPwd(salt, user.Password)
 	if err != nil {
@@ -46,10 +50,10 @@ func encryPwd(user *User) {
 
 // userLogin 用户登录
 func userLogin(c *gin.Context) {
-	var dto User
+	var dto entity.User
 	common.BindJSONWithValidate(c, &dto, "user_login")
 	// 校验密码
-	var persist User
+	var persist entity.User
 	if has, _ := common.DBEngine().Where("id=?", dto.ID).Get(&persist); has != true {
 		panic(common.HTTP400Error("账户不存在"))
 	}
@@ -66,4 +70,36 @@ func userLogin(c *gin.Context) {
 		jwt = util.GenerateJwt(persist.ID)
 	}
 	c.JSON(http.StatusOK, gin.H{"jwt": jwt})
+}
+
+// userLogout 用户退出登录
+func userLogout(c *gin.Context) {
+	// 将 jwt 放入黑名单
+	token := c.GetHeader(authHeader)
+	t := util.JwtExpiresAt(token) - time.Now().UnixNano()
+	addBlackJwt(token, time.Duration(t)*time.Nanosecond)
+}
+
+// JwtMiddelware Jwt校验中间件
+func JwtMiddelware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		token := c.GetHeader(authHeader)
+		if ok, userID := ValidJwt(token); ok {
+			c.Set("userId", userID)
+			c.Next()
+		} else {
+			panic(common.HTTP400Error("jwt不正确或者过期"))
+		}
+	}
+}
+
+// ValidJwt 校验 jwt 返回是否校验通过和 userID
+func ValidJwt(token string) (bool, string) {
+	// 从 redis black list 对比
+	if isBlack := isBlackJwt(token); isBlack {
+		return false, ""
+	}
+	// 校验 jwt
+	userID := util.ValidJwt(token)
+	return true, userID
 }

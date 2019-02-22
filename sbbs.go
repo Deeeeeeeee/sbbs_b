@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net/http"
 	"sbbs_b/common"
 	"sbbs_b/config"
 	"sbbs_b/user"
@@ -39,6 +40,7 @@ func setupConfig() {
 }
 
 func main() {
+	http.ListenAndServe(":9090", http.FileServer(http.Dir("/home/sealde/Picture")))
 	setupConfig()
 	r := setupRouter()
 	// Listen and Server in 0.0.0.0:8080

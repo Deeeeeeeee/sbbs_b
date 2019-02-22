@@ -3,10 +3,8 @@ package common
 import (
 	"log"
 	"os"
-	"os/user"
-	"sbbs_b/comment"
 	"sbbs_b/config"
-	"sbbs_b/tag"
+	"sbbs_b/entity"
 	"sync"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -49,7 +47,7 @@ func initOrm() {
 	orm.SetMaxOpenConns(50)
 
 	// 同步表结构
-	err = orm.Sync2(new(user.User), new(tag.Tag), new(comment.Comment))
+	err = orm.Sync2(new(entity.User), new(entity.Tag), new(entity.Comment))
 	if err != nil {
 		log.Fatalln(err)
 	}

@@ -11,11 +11,11 @@ import (
 var key = []byte("lSyYRiuJyxzrrsjhPSlcmBGvTdYh")
 
 // GenerateJwt 生成 jwt
-func GenerateJwt(userId int64) string {
+func GenerateJwt(userID int64) string {
 	claims := &jwt.StandardClaims{
 		ExpiresAt: time.Now().AddDate(0, 0, 1).UnixNano(),
 		Issuer:    "front",
-		Id:        string(userId),
+		Id:        string(userID),
 		IssuedAt:  time.Now().UnixNano(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -38,4 +38,18 @@ func ValidJwt(tokenStr string) string {
 	}
 
 	panic(common.HTTP400Error("登录过期"))
+}
+
+// JwtExpiresAt 获取过期时间 UnixNano
+func JwtExpiresAt(tokenStr string) int64 {
+	token, _ := jwt.ParseWithClaims(tokenStr, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
+		// Don't forget to validate the alg is what you expect:
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+		return key, nil
+	})
+
+	claims, _ := token.Claims.(jwt.StandardClaims)
+	return claims.ExpiresAt
 }
